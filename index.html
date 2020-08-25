@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style type="text/css">
+    body {
+      margin: 0;
+      background-color: gray;
+    }
+
+    canvas {
+      display: block;
+      background-color: white;
+    }
+
+
+
+
+    /* Popup container - can be anything you want */
+    .popup {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* The actual popup */
+    .popup .popuptext {
+      visibility: hidden;
+      width: 500px;
+      background-color: #555;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px 0;
+      position: fixed;
+      z-index: 1;
+      bottom: 500px;
+      left: 900px;
+      margin-left: -80px;
+    }
+
+    /* Toggle this class - hide and show the popup */
+    .popup .show {
+      visibility: visible;
+      -webkit-animation: fadeIn 1s;
+      animation: fadeIn 1s;
+    }
+
+    /* Add animation (fade in the popup) */
+    @-webkit-keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity:1 ;}
+    }
+
+
+
+
+
+
+
+  </style>
+  <script type="text/javascript" src="webgl-obj-loader.min.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <script type="text/javascript" src="objPositions.js"></script>
+</head>
+
+
+<body>
+  <canvas id="c"></canvas>
+  <div class="panel">
+    <label>Target</label>
+    <hr>
+
+    <div class="popup" onclick="handsPos();popUp();"> Hand
+    <span class="popuptext" id="myPopup">
+    <b> Hand </b><br>
+    The hand of the human body has 5 fingers and is composed in total of 27 bones...<br>
+    here can be added more details.
+    </span>
+    </div>
+    <hr>
+
+    <!--<button onclick="handsPos(); popUp();" id="btnHands"> HandL1</button>
+    <button onclick="legsPos()" id="btnLegs">Legs</button>-->
+    <div class="popup" onclick="legsPos();popUp1();"> Legs
+    <span class="popuptext" id="myPopup1">
+    <b> Legs </b><br>
+    The leg of a human are two, used as biped, allow the person to move stand. <br>
+    here can be added more details.
+    </span>
+    </div>
+    <hr>
+
+    <div class="popup" onclick="backPos();popUp2();"> Back
+    <span class="popuptext" id="myPopup2">
+    <b> Back </b><br>
+    The back, with its muscles and bones keep the human body structure straight. <br>
+    here can be added more details.
+    </span>
+    </div>
+    <hr>
+
+    <button onclick="resetPos()">Rposition</button>
+  </div>
+
+
+  <script>
+  var popup;
+
+  // When the user clicks on div, open the popup
+  function popUp() {
+    popup = document.getElementById("myPopup");
+    popup.classList.toggle("show");
+  }
+  function popUp1() {
+    popup = document.getElementById("myPopup1");
+    popup.classList.toggle("show");
+  }
+  function popUp2() {
+    popup = document.getElementById("myPopup2");
+    popup.classList.toggle("show");
+  }
+  </script>
+
+
+</body>
+
+</html>
+
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  }
+
+  button,
+  h1,
+  h2,
+  h3 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  }
+
+  .panel {
+    width: 120px;
+    height: 200px;
+    background-color: rgba(0, 0, 0, .4);
+    position: fixed;
+    top: 0;
+    right: 0;
+    text-align: center;
+  }
+
+  .panel button {
+    border: none;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, .5);
+    color: white;
+    display: block;
+    width: 100%;
+  }
+
+  .panel button:hover {
+    cursor: pointer;
+    background-color: rgb(245, 70, 70);
+  }
+
+  .panel label {
+    color: white;
+
+  }
+</style>
