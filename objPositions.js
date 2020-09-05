@@ -1,8 +1,8 @@
 "use strict";
 
-var BodyDir = 'Body/CatBody.obj';
-var Eye1Dir = 'Pieces/eye1.obj';
-var Eye2Dir = 'Pieces/eye2.obj';
+var BodyDir = 'Body/Cat_body_norm.obj';
+var Eye1Dir = 'Pieces/eye_norm.obj';
+var Eye2Dir = 'Pieces/eye_norm.obj';
 var Hand1Dir = 'Pieces/clockhand1.obj';
 var Hand2Dir = 'Pieces/clockhand2.obj';
 var TailDir = 'Pieces/tail.obj';
@@ -221,7 +221,7 @@ function main() {
 
     lastUpdateTime = currentTime;
   }
-   
+
   function drawScene(){
     animate();
 
@@ -272,7 +272,7 @@ async function init(){
     return;
   }
   // to use the program wait until the shaders have been loaded
-  await utils.loadFiles([shaderDir + 'vs.glsl', shaderDir + 'fs.glsl'], function (shaderText) {
+  await utils.loadFiles([shaderDir + 'vs.vert', shaderDir + 'fs.frag'], function (shaderText) {
     var vertexShader = utils.createShader(gl, gl.VERTEX_SHADER, shaderText[0]);
     var fragmentShader = utils.createShader(gl, gl.FRAGMENT_SHADER, shaderText[1]);
     program = utils.createProgram(gl, vertexShader, fragmentShader);
