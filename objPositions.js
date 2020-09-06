@@ -1,54 +1,17 @@
 "use strict";
 
-var BodyDir = 'Body/Cat_body_norm.obj';
-var Eye1Dir = 'Pieces/eye_norm.obj';
-var Eye2Dir = 'Pieces/eye_norm.obj';
-var Hand1Dir = 'Pieces/clockhand1.obj';
-var Hand2Dir = 'Pieces/clockhand2.obj';
-var TailDir = 'Pieces/tail.obj';
+var program;
+var gl;
 var baseDir; //base directory where we have the texture and the codes
 var shaderDir; //directory where we have the shaders
-var gl;
-var program;
-var obj = new Array();
+var bodyPath = 'model/body/Cat_body_norm.obj';
+var eyePath = 'model/pieces/eye_norm.obj';
+var minutesClockhandPath = 'model/pieces/minutesClockhand.obj';
+var hoursClockhandPath = 'model/pieces/hoursClockhand.obj';
+var tailPath = 'model/pieces/tail.obj';
+var obj;
 
-//create a structure to treat a set of objects as one
-var Node = function() {
-  this.children = [];
-  this.localMatrix = utils.identityMatrix(); //the matrix that change the position of the child with respect to the parent
-  this.worldMatrix = utils.identityMatrix(); //place the object in the world space
-};
-Node.prototype.setParent = function(parent) {
-  // if the object already has a preavoius parent it remove it to give it to another parent
-  if (this.parent) {
-    var ndx = this.parent.children.indexOf(this);
-    if (ndx >= 0) {
-      this.parent.children.splice(ndx, 1);
-    }
-  }
-  // Add us to our new parent
-  if (parent) {
-    parent.children.push(this);
-  }
-  this.parent = parent;
-};
-Node.prototype.updateWorldMatrix = function(matrix) { //call it just from the parent
-  if (matrix) {
-    // a matrix was passed in so do the math
-    this.worldMatrix = utils.multiplyMatrices(matrix, this.localMatrix);
-  } else {
-    // no matrix was passed in so just copy.
-    utils.copy(this.localMatrix, this.worldMatrix);
-  }
-  // now process all the children
-  var worldMatrix = this.worldMatrix;
-  this.children.forEach(function(child) {
-    child.updateWorldMatrix(worldMatrix);
-  });
-};
-
-
-function main() {
+async function main() {
   var lastUpdateTime = (new Date).getTime();
 
   utils.resizeCanvasToDisplaySize(gl.canvas);
@@ -67,40 +30,36 @@ function main() {
   var positionAttributeLocation = new Array();
   var uvAttributeLocation = new Array();
 
-  for (i = 0; i<obj.length; i++){
-    // 0 = body, 1 = tail, 2 = eye1, 3 = eye2, 4 = clockhand1, 5 = clockhand2
+  obj.forEach( (object, index) => {
+    // 0 = body, 1 = tail, 2 = leftEye, 3 = rightEye, 4 = minutedClockhand, 5 = hoursClockhand
 
-    //create vertex array object that store the state of vbo (position, color, indeces), need it to manage more obj 
-    vao[i] = gl.createVertexArray();
-    gl.bindVertexArray(vao[i]);
+    //create vertex array object that store the state of vbo (position, color, indeces), need it to manage more obj
+    vao[index] = gl.createVertexArray();
+    gl.bindVertexArray(vao[index]);
 
-    // ########## POSITION ###########
-
-    positionAttributeLocation[i] = gl.getAttribLocation(program, "a_position");
-    var positionBuffer = gl.createBuffer();
+    // ### POSITION ###
+    positionAttributeLocation[index] = gl.getAttribLocation(program, "a_position");
+    let positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(obj[i].vertices), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(positionAttributeLocation[i]);
-    gl.vertexAttribPointer(positionAttributeLocation[i], 3, gl.FLOAT, false, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.getVertices()), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(positionAttributeLocation[index]);
+    gl.vertexAttribPointer(positionAttributeLocation[index], 3, gl.FLOAT, false, 0, 0);
 
-    var indexBuffer = gl.createBuffer();
+    let indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(obj[i].indices), gl.STATIC_DRAW); 
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(object.getIndices()), gl.STATIC_DRAW);
 
-    // ######### UV Coordinates ###########
-
-    uvAttributeLocation[i] = gl.getAttribLocation(program, "a_uv");
-    var uvBuffer = gl.createBuffer();
+    // ### UV Coordinates ###
+    uvAttributeLocation[index] = gl.getAttribLocation(program, "a_uv");
+    let uvBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(obj[i].textures), gl.STATIC_DRAW); //non abbiamo coordinate uv
-    gl.enableVertexAttribArray(uvAttributeLocation[i]); 
-    gl.vertexAttribPointer(uvAttributeLocation[i], 2, gl.FLOAT, false, 0, 0);
-    
-  }
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.getTextures()), gl.STATIC_DRAW); //non abbiamo coordinate uv
+    gl.enableVertexAttribArray(uvAttributeLocation[index]); 
+    gl.vertexAttribPointer(uvAttributeLocation[index], 2, gl.FLOAT, false, 0, 0);
+  });
 
   //######## TEXTURE #########
-
-  textLocation = gl.getUniformLocation(program, "u_texture");
+  var textLocation = gl.getUniformLocation(program, "u_texture");
   var texture = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -108,8 +67,8 @@ function main() {
   
   //load the image
   var image = new Image();
-  image.src = baseDir + "KitCat_Color.png";
-  //when the texture is loaded (it's async) start the function - NON HO CAPITO A CHE SERVONO STE FUNZIONI
+  image.src = baseDir + "textures/KitCat_Color.png";
+  //when the texture is loaded (it's async) start the function
   image.onload = function () {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -124,25 +83,25 @@ function main() {
   var bodyNode = new Node();
   bodyNode.drawInfo = {
     programInfo: program,
-    bufferLength: indexData.length,
+    bufferLength: obj[0].getIndices().length,
     vertexArray: vao[0], //associa body a vao[0] ovvero all'oggetto body
   };
   
   var tailNode = new Node();
   tailNode.drawInfo = {
     programInfo: program,
-    bufferLength: indexData.length,
+    bufferLength: obj[1].getIndices().length,
     vertexArray: vao[1],
   };
 
   var tailOrbitNode = new Node();
-  tailOrbitNode.localMatrix = utils.MakeTranslateMatrix(100, 0, 0); //si deve muovere
+  tailOrbitNode.localMatrix = utils.MakeWorld(-0.005182, -0.014557, 0.012112, 0.0,0.0,0.0,1.0); //utils.MakeTranslateMatrix(100, 0, 0); //si deve muovere
   
   var eye1Node = new Node();
-  eye1Node.localMatrix = utils.MakeScaleMatrix(0.7, 0.7, 0.7);
+  eye1Node.localMatrix = utils.MakeWorld(-0.009095, 0.047, 0.018732, 0.0,0.0,0.0,1.0); //utils.MakeScaleMatrix(0.7, 0.7, 0.7);
   eye1Node.drawInfo = {
     programInfo: program,
-    bufferLength: indexData.length,
+    bufferLength: obj[2].getIndices().length,
     vertexArray: vao[2],
   };
 
@@ -150,10 +109,10 @@ function main() {
   eye1OrbitNode.localMatrix = utils.MakeTranslateMatrix(30, 0, 0); //si deve muovere
   
   var eye2Node = new Node();
-  eye2Node.localMatrix = utils.MakeScaleMatrix(0.7, 0.7, 0.7);
+  eye2Node.localMatrix = utils.MakeWorld(0.007117, 0.047, 0.018971, 0.0,0.0,0.0,1.0);//utils.MakeScaleMatrix(0.7, 0.7, 0.7);
   eye2Node.drawInfo = {
     programInfo: program,
-    bufferLength: indexData.length,
+    bufferLength: obj[3].getIndices().length,
     vertexArray: vao[3],
   };
 
@@ -161,20 +120,26 @@ function main() {
   eye2OrbitNode.localMatrix = utils.MakeTranslateMatrix(30, 0, 0); //si deve muovere
 
   var clockHand1Node = new Node();
-  clockHand1Node.localMatrix = utils.MakeScaleMatrix(0.7, 0.7, 0.7);
+  clockHand1Node.localMatrix = utils.MakeWorld(0.0, 0.0, 0.029, 0.0, 0.0, 0.0, 1.0);//utils.MakeScaleMatrix(0.7, 0.7, 0.7);
   clockHand1Node.drawInfo = {
     programInfo: program,
-    bufferLength: indexData.length,
+    bufferLength: obj[4].getIndices().length,
     vertexArray: vao[4],
   };
+
+  var clockHand1OrbitNode = new Node();
+  clockHand1OrbitNode.localMatrix = utils.MakeWorld(0.0, 0.0, 0.029, 0.0, 0.0, 0.0, 1.0);
   
   var clockHand2Node = new Node();
-  clockHand2Node.localMatrix = utils.MakeScaleMatrix(0.7, 0.7, 0.7);
+  clockHand2Node.localMatrix = utils.MakeWorld(0.0, 0.0, 0.028, 0.0, 0.0, 0.0, 1.0);//utils.MakeScaleMatrix(0.7, 0.7, 0.7);
   clockHand2Node.drawInfo = {
     programInfo: program,
-    bufferLength: indexData.length,
+    bufferLength: obj[5].getIndices().length,
     vertexArray: vao[5],
   };
+
+  var clockHand2OrbitNode = new Node();
+  clockHand2OrbitNode.localMatrix = utils.MakeWorld(0.0, 0.0, 0.028, 0.0, 0.0, 0.0, 1.0);
 
   //TODO creare le lancette dell'orologio e linkarle al corpo
   
@@ -188,7 +153,6 @@ function main() {
   clockHand1OrbitNode.setParent(bodyNode);
   clockHand2Node.setParent(clockHand2OrbitNode);
   clockHand2OrbitNode.setParent(bodyNode);
-  //lancettaNode.setParent(bodyNode);
 
   var objects = [
     bodyNode,
@@ -201,6 +165,8 @@ function main() {
   ];
 
   drawScene();
+
+var tailDx = 0, tailDy = 0, eyeDx = 0;
 
   function animate(){
     var currentTime = (new Date).getTime();
@@ -215,7 +181,7 @@ function main() {
     // update the local matrices for each object that have been moved.
     tailOrbitNode.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(tailDx,tailDy,0.0), tailOrbitNode.localMatrix);
     eye1OrbitNode.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(eyeDx,0.0,0.0), eye1OrbitNode.localMatrix);
-    eye2OrbitNode.localMatrix = utils.multiplyMatrices(utils.MaketranslateMatrix(eyeDx,0.0,0.0), eye2OrbitNode.localMatrix);
+    eye2OrbitNode.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(eyeDx,0.0,0.0), eye2OrbitNode.localMatrix);
     //update all the world matrix
     bodyNode.updateWorldMatrix();
 
@@ -279,26 +245,24 @@ async function init(){
   });
   gl.useProgram(program);
 
-  //load the objects
-  var bodyObjStr = await utils.get_objstr(baseDir + BodyDir);
-  var body = new OBJ.Mesh(bodyObjStr);
-  obj[0] = body;
-  var tailObjStr = await utils.get_objstr(baseDir + TailDir);
-  var tail = new OBJ.Mesh(tailObjStr);
-  obj[1] = tail;
-  var eye1ObjStr = await utils.get_objstr(baseDir + Eye1Dir);
-  var eye1 = new OBJ.Mesh(eye1ObjStr);
-  obj[2] = eye1;
-  var eye2ObjStr = await utils.get_objstr(baseDir + Eye2Dir);
-  var eye2 = new OBJ.Mesh(eye2ObjStr);
-  obj[3] = eye2;
-  var clockHand1ObjStr = await utils.get_objstr(baseDir + Hand1Dir);
-  var clockHand1 = new OBJ.Mesh(clockHand1ObjStr);
-  obj[4] = clockHand1;
-  var clockHand2ObjStr = await utils.get_objstr(baseDir + Hand2Dir);
-  var clockHand2 = new OBJ.Mesh(clockHand2ObjStr);
-  obj[5] = clockHand2;
-  //TODO creare le lancette e utilizzarle come oggetto?? Oppure usare delle linee e muoverle??
+  /*
+  * Loading the obj models
+  */
+  const bodyWrapper = new ObjectWrapper(baseDir + bodyPath);
+  const tailWrapper = new ObjectWrapper(baseDir + tailPath);
+  const leftEyeWrapper = new ObjectWrapper(baseDir + eyePath);
+  const rightEyeWrapper = new ObjectWrapper(baseDir + eyePath);
+  const minutesClockhandWrapper = new ObjectWrapper(baseDir + minutesClockhandPath);
+  const hoursClockhandWrapper = new ObjectWrapper(baseDir + hoursClockhandPath);
+  
+  await bodyWrapper.loadModel();
+  await tailWrapper.loadModel();
+  await leftEyeWrapper.loadModel();
+  await rightEyeWrapper.loadModel();
+  await minutesClockhandWrapper.loadModel();
+  await hoursClockhandWrapper.loadModel();
+
+  obj = [bodyWrapper, tailWrapper, leftEyeWrapper, rightEyeWrapper, minutesClockhandWrapper, hoursClockhandWrapper];
   
   main();
 }

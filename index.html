@@ -5,70 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
-  <title>Project</title>
+  <title>Cat Wall Clock - Computer Graphics Project</title>
 
   <script type="text/javascript" src="webgl-obj-loader.min.js"></script>
   <script type="text/javascript" src="utils.js"></script>
+  <script type="text/javascript" src="ObjectWrapper.js"></script>
+  <script type="text/javascript" src="Node.js"></script>
   <script type="text/javascript" src="objPositions.js"></script>
 </head>
 
 
 <body>
-  <canvas id="c"></canvas>
-  <div class="panel">
-    <label>Target</label>
-    <hr>
-
-    <div class="popup" onclick="handsPos();popUp();"> Hand
-    <span class="popuptext" id="myPopup">
-    <b> Hand </b><br>
-    The hand of the human body has 5 fingers and is composed in total of 27 bones...<br>
-    here can be added more details.
-    </span>
-    </div>
-    <hr>
-
-    <!--<button onclick="handsPos(); popUp();" id="btnHands"> HandL1</button>
-    <button onclick="legsPos()" id="btnLegs">Legs</button>-->
-    <div class="popup" onclick="legsPos();popUp1();"> Legs
-    <span class="popuptext" id="myPopup1">
-    <b> Legs </b><br>
-    The leg of a human are two, used as biped, allow the person to move stand. <br>
-    here can be added more details.
-    </span>
-    </div>
-    <hr>
-
-    <div class="popup" onclick="backPos();popUp2();"> Back
-    <span class="popuptext" id="myPopup2">
-    <b> Back </b><br>
-    The back, with its muscles and bones keep the human body structure straight. <br>
-    here can be added more details.
-    </span>
-    </div>
-    <hr>
-
-    <button onclick="resetPos()">Rposition</button>
-  </div>
-
-
-  <script>
-  var popup;
-
-  // When the user clicks on div, open the popup
-  function popUp() {
-    popup = document.getElementById("myPopup");
-    popup.classList.toggle("show");
-  }
-  function popUp1() {
-    popup = document.getElementById("myPopup1");
-    popup.classList.toggle("show");
-  }
-  function popUp2() {
-    popup = document.getElementById("myPopup2");
-    popup.classList.toggle("show");
-  }
-  </script>
+  <canvas id="c" width="1024" height="768" style="background-color: gray;">
+    Your browser doesn't support the Canvas Element!
+  </canvas>
+  
 
 </body>
 
