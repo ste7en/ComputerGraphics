@@ -9,6 +9,7 @@ class ObjectWrapper {
         this.pathName = pathName;
         this.object = null;
         this.model = null;
+        this.localMatrix = null;
     }
 
     /**
@@ -52,5 +53,19 @@ class ObjectWrapper {
      */
     getNormals() {
         return this.model.vertexNormals;
+    }
+
+    /**
+     * Setter of the local matrix
+     */
+    setLocalMatrix(m) {
+        this.localMatrix = m;
+    }
+
+    /**
+     * Getter of the local matrix
+     */
+    getLocalMatrix() {
+        return this.localMatrix;
     }
 }
