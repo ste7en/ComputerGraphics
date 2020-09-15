@@ -10,6 +10,7 @@ class ObjectWrapper {
         this.object = null;
         this.model = null;
         this.localMatrix = null;
+        this.programInfo = null;
     }
 
     /**
@@ -60,6 +61,7 @@ class ObjectWrapper {
      */
     setLocalMatrix(m) {
         this.localMatrix = m;
+        return this;
     }
 
     /**
@@ -67,5 +69,20 @@ class ObjectWrapper {
      */
     getLocalMatrix() {
         return this.localMatrix;
+    }
+
+    /**
+     * Setter of the programInfo
+     */
+    setProgramInfo(p) {
+        this.programInfo = p;
+        return this;
+    }
+
+    /**
+     * Getter of the programInfo
+     */
+    getProgramInfo(p) {
+        return this.programInfo;
     }
 }
