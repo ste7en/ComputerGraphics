@@ -36,15 +36,24 @@ function main() {
   gl.enable(gl.CULL_FACE);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  const tex = twgl.createTexture(gl, {
-    //min: gl.NEAREST,
-    //mag: gl.NEAREST,
+  const tex_nm = twgl.createTexture(gl, {
+    min: gl.NEAREST,
+    mag: gl.NEAREST,
+    src: "textures/kitcat_NM.png",
+    flipY: true
+  });
+  
+  const tex_color = twgl.createTexture(gl, {
+    min: gl.NEAREST,
+    mag: gl.NEAREST,
     src: "textures/KitCat_color.png",
+    flipY: true
   });
 
+
   obj.forEach( (object, index) => {
-    // 0 = body, 1 = tail, 2 = leftEye, 3 = rightEye, 4 = hoursClockhand, 5 = minutedClockhand
-    let uniforms, programInfo;
+    // 0 = tail, 1 = body, 2 = leftEye, 3 = rightEye, 4 = hoursClockhand, 5 = minutedClockhand
+    let uniforms;
     let arrays = {
       position: object.getVertices(),
       normal: object.getNormals(),
@@ -52,12 +61,12 @@ function main() {
       indices: object.getIndices()
     };
     let objBuffInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+    let programInfo = object.getProgramInfo();
+    
     objectBufferInfo.push(objBuffInfo);
 
-    programInfo = object.getProgramInfo();
-
     switch(index) {
-      case 1: // tail
+      case 0: // tail
         uniforms = {
           u_color: black,
         };
@@ -70,7 +79,8 @@ function main() {
         break;
       default:
         uniforms = {
-          u_texture: tex
+          u_texture1: tex_color,
+          u_texture2: tex_nm
         };
     }
     //uniforms.matrix = object.getLocalMatrix();
@@ -92,8 +102,8 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
-    const projection = m4.perspective(30 * Math.PI / 180, gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 20);
-    const eye = [0, 0, -6];
+    const projection = m4.perspective(30 * Math.PI / 180, gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100);
+    const eye = [0.0, 0.0, 0.3];
     const target = [0, 0, 0];
     const up = [0.0, 1.0, 0.0];
 
@@ -101,7 +111,7 @@ function main() {
     const view = m4.inverse(camera);
     const viewProjection = m4.multiply(projection, view);
     const worldID = m4.identity();
-    const worldScale = utils.MakeScaleMatrix(20);
+    const worldScale = m4.identity();//utils.MakeScaleMatrix(3);
     const world = utils.multiplyMatrices(worldID, worldScale);
 
     //uniforms.u_viewInverse = camera;
@@ -154,27 +164,27 @@ async function init(){
   /*
   * Loading the obj mod
   */
-  let bodyWrapper = new ObjectWrapper(baseDir + bodyPath);
   let tailWrapper = new ObjectWrapper(baseDir + tailPath);
+  let bodyWrapper = new ObjectWrapper(baseDir + bodyPath);
   let leftEyeWrapper = new ObjectWrapper(baseDir + eyePath);
   let rightEyeWrapper = new ObjectWrapper(baseDir + eyePath);
   let hoursClockhandWrapper = new ObjectWrapper(baseDir + hoursClockhandPath);
   let minutesClockhandWrapper = new ObjectWrapper(baseDir + minutesClockhandPath);
-  bodyWrapper.setLocalMatrix(m4.identity()).setProgramInfo(textureProgramInfo);
   tailWrapper.setLocalMatrix(tailLocalMatrix).setProgramInfo(colorProgramInfo);
+  bodyWrapper.setLocalMatrix(m4.identity()).setProgramInfo(textureProgramInfo);
   leftEyeWrapper.setLocalMatrix(leftEyeLocalMatrix).setProgramInfo(textureProgramInfo);
   rightEyeWrapper.setLocalMatrix(rightEyeLocalMatrix).setProgramInfo(textureProgramInfo);
   hoursClockhandWrapper.setLocalMatrix(clockHand2LocalMatrix).setProgramInfo(colorProgramInfo);
   minutesClockhandWrapper.setLocalMatrix(clockHand1LocalMatrix).setProgramInfo(colorProgramInfo);
 
-  await bodyWrapper.loadModel();
   await tailWrapper.loadModel();
+  await bodyWrapper.loadModel();
   await leftEyeWrapper.loadModel();
   await rightEyeWrapper.loadModel();
   await hoursClockhandWrapper.loadModel();
   await minutesClockhandWrapper.loadModel();
 
-  obj = [bodyWrapper, tailWrapper, leftEyeWrapper, rightEyeWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
+  obj = [tailWrapper, bodyWrapper, leftEyeWrapper, rightEyeWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
   
   main();
 }
