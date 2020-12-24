@@ -16,12 +16,16 @@ var objectBufferInfo = [];
 var objectUniforms = [];
 var drawObjects = [];
 
-var clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.0015, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
-var clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.0015, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
-var leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.009095, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
-var rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.007117, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
-var tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0,0.0,0.0,1.0));
-var bodyLocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));
+var elapsedTime = 0;
+var lastTimestamp = 0;
+var invertRotation = false;
+
+var clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
+var clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
+var leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
+var rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
+var tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
+var bodyLocalMatrix = utils.MakeWorld(0.0, 0.0, 0.028971, 0.0, 0.0, 0.0, 1.0);
 
 function main() {
   const black = [0.0, 0.0, 0.0, 1.0];
@@ -49,7 +53,7 @@ function main() {
   });
 
   obj.forEach( (object, index) => {
-    // 0 = tail, 1 = body, 2 = leftEye, 3 = rightEye, 4 = hoursClockhand, 5 = minuteClockhand
+    // 0 = tail, 3 = body, 1 = leftEye, 2 = rightEye, 4 = hoursClockhand, 5 = minuteClockhand
     let uniforms;
     let arrays = {
       position: object.getVertices(),
@@ -90,7 +94,9 @@ function main() {
   });
 
   function drawScene(time) {
-    //animate();
+    if (lastTimestamp === undefined && time !== undefined) {lastTimestamp = time;}
+    elapsedTime = elapsedTime + (time ? time : 0) - lastTimestamp;
+    lastTimestamp = time;
     time *= 0.001;
     twgl.resizeCanvasToDisplaySize(gl.canvas);
     // Tell WebGL how to convert from clip space to pixels
@@ -99,7 +105,7 @@ function main() {
     gl.enable(gl.CULL_FACE);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const eye = [0.0, 0.0, 0.125]; //ok
+    const eye = [0.0, 0.025, 0.125]; //ok
     const target = [0.0, 0.0, 0.0]; //ok
     const up = [0.0, 1.0, 0.0]; //a vector pointing up 
     const camera = m4.lookAt(eye, target, up);
@@ -112,11 +118,30 @@ function main() {
     let hour = hour_24 < 12 ? hour_24 : hour_24 - 12;
     let minutes = date.getMinutes();
 
-    let hoursRotationMatrix = m4.rotateZ(clockHand1LocalMatrix, -(hour + minutes/60.0) * (360.0/12.0) * Math.PI/180.0);
-    let minutesRotationMatrix = m4.rotateZ(clockHand2LocalMatrix, -minutes * (360.0 / 60.0) * Math.PI/180.0);
+    let hoursRotationMatrix = m4.rotateZ(clockHand1LocalMatrix, -(hour + minutes/60.0) * 2 * Math.PI/12.0);
+    let minutesRotationMatrix = m4.rotateZ(clockHand2LocalMatrix, -minutes * 2 * Math.PI/60.0);
 
     drawObjects[4].localMatrix = hoursRotationMatrix;
     drawObjects[5].localMatrix = minutesRotationMatrix;
+    /* End clockhands rotation */
+
+    /* Tail and eyes rotation */
+    const delta = 1; // 1 degree each frame
+    if (!invertRotation) {
+      m4.rotateZ(tailLocalMatrix, delta * Math.PI / 180, tailLocalMatrix);
+      m4.rotateY(leftEyeLocalMatrix, delta * Math.PI / 180, leftEyeLocalMatrix);
+      m4.rotateY(rightEyeLocalMatrix, delta * Math.PI / 180, rightEyeLocalMatrix);
+    } else {
+      m4.rotateZ(tailLocalMatrix, -delta * Math.PI / 180, tailLocalMatrix);
+      m4.rotateY(leftEyeLocalMatrix, -delta * Math.PI / 180, leftEyeLocalMatrix);
+      m4.rotateY(rightEyeLocalMatrix, -delta * Math.PI / 180, rightEyeLocalMatrix);
+    }
+
+    if (elapsedTime > 500) {
+      invertRotation = !invertRotation;
+      elapsedTime = 0;
+    }
+    /* End tail and eyes rotation */
 
     drawObjects.forEach(function(obj) {
       const programInfo = obj.programInfo;
@@ -131,7 +156,7 @@ function main() {
     })
 
     //with this call, we call again drawScene for each frame, used for animation
-    window.requestAnimationFrame(drawScene)
+    window.requestAnimationFrame(drawScene);
   }
 
   drawScene();
@@ -186,7 +211,7 @@ async function init(){
   await minutesClockhandWrapper.loadModel();
 
   // Save each object wrapper in a unique array of objects to draw
-  obj = [tailWrapper, bodyWrapper, leftEyeWrapper, rightEyeWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
+  obj = [tailWrapper, leftEyeWrapper, rightEyeWrapper, bodyWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
   
   main();
 }
