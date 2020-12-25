@@ -16,7 +16,7 @@ var objectBufferInfo = [];
 var objectUniforms = [];
 var drawObjects = [];
 
-var elapsedTime = 0;
+var frameCounter = 0;
 var lastTimestamp = 0;
 var invertRotation = false;
 
@@ -25,7 +25,7 @@ var clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0,
 var leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
 var rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
 var tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
-var bodyLocalMatrix = utils.MakeWorld(0.0, 0.0, 0.028971, 0.0, 0.0, 0.0, 1.0);
+var bodyLocalMatrix = m4.identity();
 
 function main() {
   const black = [0.0, 0.0, 0.0, 1.0];
@@ -95,9 +95,9 @@ function main() {
 
   function drawScene(time) {
     if (lastTimestamp === undefined && time !== undefined) {lastTimestamp = time;}
-    elapsedTime = elapsedTime + (time ? time : 0) - lastTimestamp;
+    frameCounter = frameCounter + 1;
     lastTimestamp = time;
-    time *= 0.001;
+
     twgl.resizeCanvasToDisplaySize(gl.canvas);
     // Tell WebGL how to convert from clip space to pixels
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -137,10 +137,8 @@ function main() {
       m4.rotateY(rightEyeLocalMatrix, -delta * Math.PI / 180, rightEyeLocalMatrix);
     }
 
-    if (elapsedTime > 500) {
-      invertRotation = !invertRotation;
-      elapsedTime = 0;
-    }
+    invertRotation = frameCounter == 15 ? !invertRotation : invertRotation;
+    frameCounter = frameCounter == 30 ? 0 : frameCounter
     /* End tail and eyes rotation */
 
     drawObjects.forEach(function(obj) {
