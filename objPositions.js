@@ -2,31 +2,128 @@
 
 twgl.setDefaults({attribPrefix: "a_"});
 const m4 = twgl.m4;
-var gl, textureProgramInfo, colorProgramInfo;
-var baseDir, shaderDir;
+let gl, textureProgramInfo, colorProgramInfo;
+let baseDir, shaderDir;
 
-var bodyPath = 'model/body/Cat_body_norm.obj';
-var eyePath = 'model/pieces/eye_norm.obj';
-var minutesClockhandPath = 'model/pieces/minutesClockhand.obj';
-var hoursClockhandPath = 'model/pieces/hoursClockhand.obj';
-var tailPath = 'model/pieces/tail.obj';
+const bodyPath = 'model/body/Cat_body_norm.obj';
+const eyePath = 'model/pieces/eye_norm.obj';
+const minutesClockhandPath = 'model/pieces/minutesClockhand.obj';
+const hoursClockhandPath = 'model/pieces/hoursClockhand.obj';
+const tailPath = 'model/pieces/tail.obj';
 
-var obj = [];
-var objectBufferInfo = [];
-var objectUniforms = [];
-var drawObjects = [];
+let obj = [];
+let objectBufferInfo = [];
+let objectUniforms = [];
+let drawObjects = [];
 
-var frameCounter = 0;
-var lastTimestamp = 0;
-var invertRotation = false;
+let frameCounter = 0;
+let invertRotation = false;
 
-var clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
-var clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
-var leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
-var rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
-var tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
-var bodyLocalMatrix = m4.identity();
+let clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
+let clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
+let leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
+let rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
+let tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
+const bodyLocalMatrix = m4.identity();
 
+// Vector and matrixes used in drawScene() to compute the worldViewProjectionMatrix
+const eye = [0.0, 0.025, 0.125];
+const target = [0.0, 0.0, 0.0];
+const up = [0.0, 1.0, 0.0]; //a vector pointing up 
+const camera = m4.lookAt(eye, target, up);
+const viewMatrix = m4.inverse(camera);
+
+/**
+ * Performs matrix manipulations and animations of the scene to be drawn.
+ *
+ * The handclocks rotation (in degrees) is calculated on the current time,
+ * while the tail and eyes rotation relies on the fact that window.requestAnimationFrame
+ * is called 60 times per second (https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)
+ * therefore in 60fps the tail and eyes will have 15 frames to move in a direction, 15f to
+ * return to the centre and again (15+15)frames in the opposite direction, resulting
+ * in a 60frames (== 1 second) movement. 
+ * The resulting rotation is (delta * 15) degrees (e.g. delta = 1 means 15° rotation of eyes and tail)
+ */
+function animate() {
+  frameCounter += 1;
+
+  // Clockhands rotations based on time
+  let date = new Date();
+  let hour_24 = date.getHours();
+  let hour = hour_24 < 12 ? hour_24 : hour_24 - 12;
+  let minutes = date.getMinutes();
+
+  let hoursRotationMatrix = m4.rotateZ(clockHand1LocalMatrix, -(hour + minutes/60.0) * 2 * Math.PI/12.0);
+  let minutesRotationMatrix = m4.rotateZ(clockHand2LocalMatrix, -minutes * 2 * Math.PI/60.0);
+  drawObjects[4].localMatrix = hoursRotationMatrix;
+  drawObjects[5].localMatrix = minutesRotationMatrix;
+    /**
+     * The block above could be rewritten in a short form as:
+     * 
+     *  m4.rotationZ(-(hour + minutes/60.0) * 2 * Math.PI/12.0, clockHand1LocalMatrix);
+     *  m4.rotationZ(-minutes * 2 * Math.PI/60.0, clockHand2LocalMatrix)
+     * 
+     * but in this case I should translate and scale the two matrixes, 
+     * resulting in (2*rot + 2*tr + 2*sc) = 6 instructions vs. 4 in the actual block
+     */
+  // End clockhands rotation
+
+  // Tail and eyes rotation
+  const delta = 1; // 1 degree each frame
+  if (!invertRotation) {
+    m4.rotateZ(tailLocalMatrix, delta * Math.PI / 180, tailLocalMatrix);
+    m4.rotateY(leftEyeLocalMatrix, delta * Math.PI / 180, leftEyeLocalMatrix);
+    m4.rotateY(rightEyeLocalMatrix, delta * Math.PI / 180, rightEyeLocalMatrix);
+  } else {
+    m4.rotateZ(tailLocalMatrix, -delta * Math.PI / 180, tailLocalMatrix);
+    m4.rotateY(leftEyeLocalMatrix, -delta * Math.PI / 180, leftEyeLocalMatrix);
+    m4.rotateY(rightEyeLocalMatrix, -delta * Math.PI / 180, rightEyeLocalMatrix);
+  }
+
+  invertRotation = frameCounter == 15 ? !invertRotation : invertRotation;
+  frameCounter = frameCounter == 30 ? 0 : frameCounter
+  // End tail and eyes rotation
+}
+
+/**
+ * This method is responsible for drawing the scene and calling itself for
+ * each frame of the animation. The projection matrix is computed at each frame
+ * to enable the resizeability of the window.
+ * 
+ * @param {number} time - Milliseconds from the first call
+ */
+function drawScene(time) {
+  twgl.resizeCanvasToDisplaySize(gl.canvas); // Resize a canvas to match the size it's displayed.
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height); // Tell WebGL how to convert from clip space to pixels
+  // TODO: remove commented code
+  // gl.enable(gl.DEPTH_TEST);
+  // gl.enable(gl.CULL_FACE);
+  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  let projectionMatrix = m4.perspective(90 * Math.PI / 180, gl.canvas.width / gl.canvas.height, 0.0, 10);
+
+  animate();
+
+  drawObjects.forEach(function(obj) {
+    const programInfo = obj.programInfo;
+    let worldMatrix = m4.multiply(viewMatrix, obj.localMatrix);
+    let worldViewProjectionMatrix = m4.multiply(projectionMatrix, worldMatrix);
+    obj.uniforms.u_worldViewProjection = worldViewProjectionMatrix;
+
+    gl.useProgram(programInfo.program);
+    twgl.setBuffersAndAttributes(gl, programInfo, obj.vertexArrayInfo); // binds buffers and sets attributes
+    twgl.setUniforms(programInfo, obj.uniforms);
+    twgl.drawBufferInfo(gl, obj.vertexArrayInfo);
+  })
+
+  window.requestAnimationFrame(drawScene);
+}
+
+/**
+ * Settings for the different components to be drawn.
+ * For each object it sets the uniforms (color and position), their
+ * local matrix, VAO and program info of the program that will draw them.
+ */
 function main() {
   const black = [0.0, 0.0, 0.0, 1.0];
   const white = [1.0, 1.0, 1.0, 1.0];
@@ -53,8 +150,8 @@ function main() {
   });
 
   obj.forEach( (object, index) => {
-    // 0 = tail, 3 = body, 1 = leftEye, 2 = rightEye, 4 = hoursClockhand, 5 = minuteClockhand
-    let uniforms;
+    // 0 = tail, 1 = leftEye, 2 = rightEye, 3 = body, 4 = hoursClockhand, 5 = minuteClockhand
+    let uniforms = {};
     let arrays = {
       position: object.getVertices(),
       normal: object.getNormals(),
@@ -68,23 +165,17 @@ function main() {
 
     switch(index) {
       case 0: // tail
-        uniforms = {
-          u_color: black,
-        };
+        uniforms.u_color = black;
         break;
       case 4:
       case 5: //clockhands
-        uniforms = {
-          u_color: white,
-        };
+        uniforms.u_color = white;
         break;
       default:
-        uniforms = {
-          u_texture1: tex_color,
-          u_texture2: tex_nm
-        };
+        uniforms.u_texture1 = tex_color;
+        uniforms.u_texture2 = tex_nm;
     }
-    //uniforms.matrix = object.getLocalMatrix();
+
     drawObjects.push({
       programInfo: programInfo,
       vertexArrayInfo: objBuffInfo,
@@ -93,74 +184,14 @@ function main() {
     });
   });
 
-  function drawScene(time) {
-    if (lastTimestamp === undefined && time !== undefined) {lastTimestamp = time;}
-    frameCounter = frameCounter + 1;
-    lastTimestamp = time;
+  window.requestAnimationFrame(drawScene);
+}
 
-    twgl.resizeCanvasToDisplaySize(gl.canvas);
-    // Tell WebGL how to convert from clip space to pixels
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    //gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    const eye = [0.0, 0.025, 0.125]; //ok
-    const target = [0.0, 0.0, 0.0]; //ok
-    const up = [0.0, 1.0, 0.0]; //a vector pointing up 
-    const camera = m4.lookAt(eye, target, up);
-    const viewMatrix = m4.inverse(camera);
-    const projectionMatrix = m4.perspective(90 * Math.PI / 180, gl.canvas.width / gl.canvas.height, 0.0, 10);
-
-    /* Clockhands rotations based on time */
-    let date = new Date();
-    let hour_24 = date.getHours();
-    let hour = hour_24 < 12 ? hour_24 : hour_24 - 12;
-    let minutes = date.getMinutes();
-
-    let hoursRotationMatrix = m4.rotateZ(clockHand1LocalMatrix, -(hour + minutes/60.0) * 2 * Math.PI/12.0);
-    let minutesRotationMatrix = m4.rotateZ(clockHand2LocalMatrix, -minutes * 2 * Math.PI/60.0);
-
-    drawObjects[4].localMatrix = hoursRotationMatrix;
-    drawObjects[5].localMatrix = minutesRotationMatrix;
-    /* End clockhands rotation */
-
-    /* Tail and eyes rotation */
-    const delta = 1; // 1 degree each frame
-    if (!invertRotation) {
-      m4.rotateZ(tailLocalMatrix, delta * Math.PI / 180, tailLocalMatrix);
-      m4.rotateY(leftEyeLocalMatrix, delta * Math.PI / 180, leftEyeLocalMatrix);
-      m4.rotateY(rightEyeLocalMatrix, delta * Math.PI / 180, rightEyeLocalMatrix);
-    } else {
-      m4.rotateZ(tailLocalMatrix, -delta * Math.PI / 180, tailLocalMatrix);
-      m4.rotateY(leftEyeLocalMatrix, -delta * Math.PI / 180, leftEyeLocalMatrix);
-      m4.rotateY(rightEyeLocalMatrix, -delta * Math.PI / 180, rightEyeLocalMatrix);
-    }
-
-    invertRotation = frameCounter == 15 ? !invertRotation : invertRotation;
-    frameCounter = frameCounter == 30 ? 0 : frameCounter
-    /* End tail and eyes rotation */
-
-    drawObjects.forEach(function(obj) {
-      const programInfo = obj.programInfo;
-      let worldMatrix = m4.multiply(viewMatrix, obj.localMatrix);
-      let worldViewProjectionMatrix = m4.multiply(projectionMatrix, worldMatrix);
-      obj.uniforms.u_worldViewProjection = worldViewProjectionMatrix;
-
-      gl.useProgram(programInfo.program);
-      twgl.setBuffersAndAttributes(gl, programInfo, obj.vertexArrayInfo);
-      twgl.setUniforms(programInfo, obj.uniforms);
-      twgl.drawBufferInfo(gl, obj.vertexArrayInfo);
-    })
-
-    //with this call, we call again drawScene for each frame, used for animation
-    window.requestAnimationFrame(drawScene);
-  }
-
-  drawScene();
-  
-} // end main
-
+/**
+ * Compiles the shaders and creates their setters
+ * for attributes and uniforms, and loads the 3D
+ * models of objects to be drawn.
+ */
 async function init(){
   // retrieve shader using path
   var path = window.location.pathname;
@@ -178,9 +209,11 @@ async function init(){
   
   // Loading the shaders and creating programs
   await utils.loadFiles([shaderDir + 'texture_vs.vert', shaderDir + 'texture_fs.frag'], function (shaderText) {
+    // compiles a shader and creates setters for attribs and uniforms
     textureProgramInfo = twgl.createProgramInfo(gl, [shaderText[0], shaderText[1]], ["a_texcoord", "a_position"]);
   });
   await utils.loadFiles([shaderDir + 'color_vs.vert', shaderDir + 'color_fs.frag'], function (shaderText) {
+    // compiles a shader and creates setters for attribs and uniforms
     colorProgramInfo = twgl.createProgramInfo(gl, [shaderText[0], shaderText[1]], ["a_position"]);
   });
 
