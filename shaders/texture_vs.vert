@@ -2,11 +2,16 @@
 
 in vec3 a_position; //in = attribute, we need a vertex buffer object
 in vec2 a_texcoord;
-out vec2 uv_fs; //don't need the buffer object because we initialize it in here
+in vec3 a_normal;
+out vec2 fs_uv; //don't need the buffer object because we initialize it in here
+out vec3 fs_pos;
+out vec3 fs_norm;
 
 uniform mat4 u_worldViewProjection;
 
 void main() {
-  uv_fs = a_texcoord;
+  fs_uv = a_texcoord;
+  fs_pos = (u_worldViewProjection * vec4(a_position, 1.0)).xyz; //a_position;
+  fs_norm = (u_worldViewProjection * vec4(a_normal, 1.0)).xyz; //a_normal;
   gl_Position = (u_worldViewProjection * vec4(a_position, 1.0));
 }

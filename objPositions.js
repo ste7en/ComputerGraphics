@@ -19,8 +19,8 @@ let drawObjects = [];
 let frameCounter = 0;
 let invertRotation = false;
 
-let clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
-let clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.0, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
+let clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
+let clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
 let leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
 let rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
 let tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
@@ -134,57 +134,78 @@ function main() {
   //gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  
-  const tex_color = twgl.createTexture(gl, {
-    min: gl.NEAREST,
-    mag: gl.NEAREST,
-    src: "textures/KitCat_color.png",
-    flipY: true
-  });
 
-  const tex_nm = twgl.createTexture(gl, {
-    min: gl.NEAREST,
-    mag: gl.NEAREST,
-    src: "textures/kitcat_NM.png",
-    flipY: true
-  });
-
-  obj.forEach( (object, index) => {
-    // 0 = tail, 1 = leftEye, 2 = rightEye, 3 = body, 4 = hoursClockhand, 5 = minuteClockhand
-    let uniforms = {};
-    let arrays = {
-      position: object.getVertices(),
-      normal: object.getNormals(),
-      texcoord: object.getTextures(),
-      indices: object.getIndices()
-    };
-    let objBuffInfo = twgl.createBufferInfoFromArrays(gl, arrays);
-    let programInfo = object.getProgramInfo();
-    
-    objectBufferInfo.push(objBuffInfo);
-
-    switch(index) {
-      case 0: // tail
-        uniforms.u_color = black;
-        break;
-      case 4:
-      case 5: //clockhands
-        uniforms.u_color = white;
-        break;
-      default:
-        uniforms.u_texture1 = tex_color;
-        uniforms.u_texture2 = tex_nm;
+  const textures = twgl.createTextures(gl, {
+    color: {
+      src: "textures/KitCat_color.png",
+      min: gl.NEAREST,
+      mag: gl.NEAREST,
+      flipY: true
+    },
+    normalMap: {
+      src: "textures/kitcat_NM.png",
+      min: gl.NEAREST,
+      mag: gl.NEAREST,
+      flipY: true
     }
-
-    drawObjects.push({
-      programInfo: programInfo,
-      vertexArrayInfo: objBuffInfo,
-      uniforms: uniforms,
-      localMatrix: object.getLocalMatrix()
-    });
+  }, () => {
+    setupObjects();
+    window.requestAnimationFrame(drawScene);
   });
 
-  window.requestAnimationFrame(drawScene);
+  /**
+   * Inner function used to setup objects after 
+   * the textures have been loaded and created.
+   *
+   * This will set the buffers and uniforms of each
+   * object, setting tail and clockhands with specific colors
+   * and the rest of the objects with their textures.
+   */
+  function setupObjects() {
+    obj.forEach( (object, index) => {
+      // 0 = tail, 1 = leftEye, 2 = rightEye, 3 = body, 4 = hoursClockhand, 5 = minuteClockhand
+      let uniforms = {};
+      let arrays = {
+        position: object.getVertices(),
+        normal: object.getNormals(),
+        texcoord: object.getTextures(),
+        indices: object.getIndices()
+      };
+      let objBuffInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+      let programInfo = object.getProgramInfo();
+      
+      objectBufferInfo.push(objBuffInfo);
+  
+      switch(index) {
+        case 0: // tail
+          uniforms.u_color = black;
+          break;
+        case 4:
+        case 5: //clockhands
+          uniforms.u_color = white;
+          break;
+        default:
+          uniforms.u_texture = textures.color;
+          uniforms.u_normalMap = textures.normalMap;
+      }
+      var dirLightAlpha = -utils.degToRad(180); 
+      var dirLightBeta  = -utils.degToRad(270);
+      var directionalLight = [Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
+                              Math.sin(dirLightAlpha),
+                              Math.cos(dirLightAlpha) * Math.sin(dirLightBeta)
+                            ];
+                            // TODO DELETE
+      uniforms.u_lightDirection = [0.0, 0.0, -0.05]; //directionalLight;
+      uniforms.u_lightColor = [1.0, 1.0, 1.0, 1.0];
+
+      drawObjects.push({
+        programInfo: programInfo,
+        vertexArrayInfo: objBuffInfo,
+        uniforms: uniforms,
+        localMatrix: object.getLocalMatrix()
+      });
+    });
+  }
 }
 
 /**
@@ -210,7 +231,7 @@ async function init(){
   // Loading the shaders and creating programs
   await utils.loadFiles([shaderDir + 'texture_vs.vert', shaderDir + 'texture_fs.frag'], function (shaderText) {
     // compiles a shader and creates setters for attribs and uniforms
-    textureProgramInfo = twgl.createProgramInfo(gl, [shaderText[0], shaderText[1]], ["a_texcoord", "a_position"]);
+    textureProgramInfo = twgl.createProgramInfo(gl, [shaderText[0], shaderText[1]], ["a_texcoord", "a_position", "a_normal"]);
   });
   await utils.loadFiles([shaderDir + 'color_vs.vert', shaderDir + 'color_fs.frag'], function (shaderText) {
     // compiles a shader and creates setters for attribs and uniforms
