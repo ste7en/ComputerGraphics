@@ -10,6 +10,7 @@ out vec4 outColor;
 uniform sampler2D u_texture;
 uniform sampler2D u_normalMap;
 uniform vec3 u_lightPos;
+uniform vec3 u_eyeDirVec;
 
 void main() { 
   // On-the fly computation of geometrical normal
@@ -47,14 +48,17 @@ void main() {
   vec3 nmNormal = textnm.rgb * 2.0 - vec3(1.0, 1.0, 1.0);
   vec3 n = normalize(tbn * nmNormal);
 
-  // Light computation through Lambert diffusion
-  // and texture color
+  // Light computation through Lambert diffusion,
+  // Phong specular and texture color
   vec4 textcol = texture(u_texture, fs_uv);
-  vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
-  vec3 nLightDirection = normalize(-u_lightDirection);
+  vec4 diffLightColor = vec4(1.0, 1.0, 1.0, 1.0);
+  vec4 specLightColor = vec4(1.0, 1.0, 1.0, 1.0);
   vec3 nLightDirection = normalize(u_lightPos - fs_pos);
+  float SpecShine = 0.2;
 
-  vec4 diffTerm = lightColor  * textcol * clamp(dot(nLightDirection, n), 0.0, 1.0);
+  vec4 diffTerm = diffLightColor * textcol * clamp(dot(nLightDirection, n), 0.0, 1.0);
+  vec3 reflTerm = -reflect(nLightDirection, n);
+  vec4 specTerm = specLightColor * textcol * pow(clamp(dot(u_eyeDirVec, reflTerm), 0.0, 1.0), SpecShine);
 
-  outColor = vec4(diffTerm.rgb, 1.0);
+  outColor = vec4(clamp(diffTerm + specTerm, 0.0, 1.0).rgb, 1.0);
 }

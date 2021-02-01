@@ -197,6 +197,7 @@ function main() {
                             // TODO DELETE
       uniforms.u_lightPos = [0.0, 0.0, 0.05];
       uniforms.u_lightColor = [1.0, 1.0, 1.0, 1.0];
+      uniforms.u_eyeDirVec = eye;
 
       drawObjects.push({
         programInfo: programInfo,
