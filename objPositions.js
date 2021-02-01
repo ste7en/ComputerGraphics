@@ -24,10 +24,10 @@ let clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.
 let leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
 let rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
 let tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
-const bodyLocalMatrix = m4.identity();
+const bodyLocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
 
 // Vector and matrixes used in drawScene() to compute the worldViewProjectionMatrix
-const eye = [0.0, 0.025, 0.125];
+const eye = [0.0, 0.02, 0.125];
 const target = [0.0, 0.0, 0.0];
 const up = [0.0, 1.0, 0.0]; //a vector pointing up 
 const camera = m4.lookAt(eye, target, up);
