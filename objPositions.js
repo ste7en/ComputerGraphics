@@ -188,15 +188,10 @@ function main() {
           uniforms.u_texture = textures.color;
           uniforms.u_normalMap = textures.normalMap;
       }
-      var dirLightAlpha = -utils.degToRad(180); 
-      var dirLightBeta  = -utils.degToRad(270);
-      var directionalLight = [Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
-                              Math.sin(dirLightAlpha),
-                              Math.cos(dirLightAlpha) * Math.sin(dirLightBeta)
-                            ];
-                            // TODO DELETE
+
       uniforms.u_lightPos = [0.0, 0.0, 0.05];
-      uniforms.u_lightColor = [1.0, 1.0, 1.0, 1.0];
+      uniforms.u_diffLightColor = [1.0, 1.0, 1.0, 1.0];
+      uniforms.u_specLightColor = [1.0, 1.0, 1.0, 1.0];
       uniforms.u_eyeDirVec = eye;
 
       drawObjects.push({
