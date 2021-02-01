@@ -195,7 +195,7 @@ function main() {
                               Math.cos(dirLightAlpha) * Math.sin(dirLightBeta)
                             ];
                             // TODO DELETE
-      uniforms.u_lightDirection = [0.0, 0.0, -0.05]; //directionalLight;
+      uniforms.u_lightPos = [0.0, 0.0, 0.05];
       uniforms.u_lightColor = [1.0, 1.0, 1.0, 1.0];
 
       drawObjects.push({

@@ -9,7 +9,7 @@ out vec4 outColor;
 
 uniform sampler2D u_texture;
 uniform sampler2D u_normalMap;
-uniform vec3 u_lightDirection;
+uniform vec3 u_lightPos;
 
 void main() { 
   // On-the fly computation of geometrical normal
@@ -52,6 +52,7 @@ void main() {
   vec4 textcol = texture(u_texture, fs_uv);
   vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
   vec3 nLightDirection = normalize(-u_lightDirection);
+  vec3 nLightDirection = normalize(u_lightPos - fs_pos);
 
   vec4 diffTerm = lightColor  * textcol * clamp(dot(nLightDirection, n), 0.0, 1.0);
 
