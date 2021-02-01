@@ -11,7 +11,7 @@ uniform mat4 u_worldViewProjection;
 
 void main() {
   fs_uv = a_texcoord;
-  fs_pos = (u_worldViewProjection * vec4(a_position, 1.0)).xyz; //a_position;
-  fs_norm = (u_worldViewProjection * vec4(a_normal, 1.0)).xyz; //a_normal;
+  fs_pos = a_position;
+  fs_norm = a_normal;
   gl_Position = (u_worldViewProjection * vec4(a_position, 1.0));
 }
