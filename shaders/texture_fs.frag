@@ -43,7 +43,8 @@ void main() {
   //// Finally, the tangent transform matrix (TBN)
   mat3 tbn =  mat3(t, b, n_norm);
 
-  vec3 nmNormal = texture(u_normalMap, fs_uv).rgb * 2.0 - 1.0;
+  vec4 textnm = texture(u_normalMap, fs_uv);
+  vec3 nmNormal = textnm.rgb * 2.0 - vec3(1.0, 1.0, 1.0);
   vec3 n = normalize(tbn * nmNormal);
 
   // Light computation through Lambert diffusion
@@ -54,5 +55,5 @@ void main() {
 
   vec4 diffTerm = lightColor  * textcol * clamp(dot(nLightDirection, n), 0.0, 1.0);
 
-  outColor = vec4(diffTerm.rgb, textcol.a);
+  outColor = vec4(diffTerm.rgb, 1.0);
 }
