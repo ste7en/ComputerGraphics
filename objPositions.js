@@ -1,7 +1,6 @@
 "use strict";
 
 twgl.setDefaults({attribPrefix: "a_"});
-const m4 = twgl.m4;
 let gl, textureProgramInfo, colorProgramInfo;
 let baseDir, shaderDir;
 
@@ -19,12 +18,12 @@ let drawObjects = [];
 let frameCounter = 0;
 let invertRotation = false;
 
-let clockHand1LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
-let clockHand2LocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
-let leftEyeLocalMatrix = m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
-let rightEyeLocalMatrix = m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
-let tailLocalMatrix = m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
-const bodyLocalMatrix = m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
+let clockHand1LocalMatrix = makeLocalMatrix(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
+let clockHand2LocalMatrix = makeLocalMatrix(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
+let leftEyeLocalMatrix = makeLocalMatrix(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0); //m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
+let rightEyeLocalMatrix = makeLocalMatrix(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0); //m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
+let tailLocalMatrix = makeLocalMatrix(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0); //m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
+const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0); //m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
 
 // Vector and matrixes used in drawScene() to compute the worldViewProjectionMatrix
 const eye = [0.0, 0.02, 0.125];
