@@ -231,7 +231,7 @@ async function init(){
   });
   await utils.loadFiles([shaderDir + 'color_vs.vert', shaderDir + 'color_fs.frag'], function (shaderText) {
     // compiles a shader and creates setters for attribs and uniforms
-    colorProgramInfo = twgl.createProgramInfo(gl, [shaderText[0], shaderText[1]], ["a_position"]);
+    colorProgramInfo = twgl.createProgramInfo(gl, [shaderText[0], shaderText[1]], ["a_position", "a_normal"]);
   });
 
   /*
