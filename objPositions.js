@@ -18,15 +18,15 @@ let drawObjects = [];
 let frameCounter = 0;
 let invertRotation = false;
 
-let clockHand1LocalMatrix = makeLocalMatrix(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
-let clockHand2LocalMatrix = makeLocalMatrix(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
-let leftEyeLocalMatrix = makeLocalMatrix(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0); //m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
-let rightEyeLocalMatrix = makeLocalMatrix(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0); //m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
-let tailLocalMatrix = makeLocalMatrix(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0); //m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
-const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0); //m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
+let clockHand1LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
+let clockHand2LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
+let leftEyeLocalMatrix = makeLocalMatrix(-0.00799, 0.0475, 0.018, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
+let rightEyeLocalMatrix = makeLocalMatrix(0.00799, 0.0475, 0.018, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
+let tailLocalMatrix = makeLocalMatrix(-0.005182, -0.014557, 0.012112, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
+const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
 
 // Vector and matrixes used in drawScene() to compute the worldViewProjectionMatrix
-const eye = [0.0, 0.02, 0.125];
+const eye = [0.0, 0.05, 0.2];
 const target = [0.0, 0.0, 0.0];
 const up = [0.0, 1.0, 0.0]; //a vector pointing up 
 const camera = m4.lookAt(eye, target, up);
@@ -95,19 +95,21 @@ function drawScene(time) {
   twgl.resizeCanvasToDisplaySize(gl.canvas); // Resize a canvas to match the size it's displayed.
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height); // Tell WebGL how to convert from clip space to pixels
   // TODO: remove commented code
-  //gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.CULL_FACE);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  let projectionMatrix = m4.perspective(90 * Math.PI / 180, gl.canvas.width / gl.canvas.height, 0.0, 10);
+  let projectionMatrix = m4.perspective(90 * Math.PI / 180, gl.canvas.width / gl.canvas.height, 0.001, 100);
 
   animate();
 
   drawObjects.forEach(function(obj) {
     const programInfo = obj.programInfo;
-    let worldMatrix = m4.multiply(viewMatrix, obj.localMatrix);
-    let worldViewProjectionMatrix = m4.multiply(projectionMatrix, worldMatrix);
+    let worldViewMatrix = m4.multiply(viewMatrix, obj.localMatrix);
+    let worldViewProjectionMatrix = m4.multiply(projectionMatrix, worldViewMatrix);
     obj.uniforms.u_worldViewProjection = worldViewProjectionMatrix;
+    obj.uniforms.u_vertexMatrix = obj.localMatrix;
+    obj.uniforms.u_normalMatrix = m4.inverse(m4.transpose(obj.localMatrix));
+
+    setupLightsUniforms(obj.uniforms);
 
     gl.useProgram(programInfo.program);
     twgl.setBuffersAndAttributes(gl, programInfo, obj.vertexArrayInfo); // binds buffers and sets attributes
@@ -130,7 +132,7 @@ function main() {
   twgl.resizeCanvasToDisplaySize(gl.canvas);
   // Tell WebGL how to convert from clip space to pixels
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  //gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -142,10 +144,7 @@ function main() {
       flipY: true
     },
     normalMap: {
-      src: "textures/kitcat_NM.png",
-      min: gl.NEAREST,
-      mag: gl.NEAREST,
-      flipY: true
+      src: "textures/kitcat_NM.png"
     }
   }, () => {
     setupObjects();
@@ -188,10 +187,7 @@ function main() {
           uniforms.u_normalMap = textures.normalMap;
       }
 
-      uniforms.u_lightPos = [0.0, 0.0, 0.05];
-      uniforms.u_diffLightColor = [1.0, 1.0, 1.0, 1.0];
-      uniforms.u_specLightColor = [1.0, 1.0, 1.0, 1.0];
-      uniforms.u_eyeDirVec = eye;
+      uniforms.u_eyePos = eye;
 
       drawObjects.push({
         programInfo: programInfo,
@@ -218,6 +214,7 @@ async function init(){
   // create canvas
   var canvas = document.getElementById("c");
   gl = canvas.getContext("webgl2");
+  console.log(gl);
   if (!gl) {
     document.write("GL context not opened");
     return;
@@ -259,7 +256,7 @@ async function init(){
 
   // Save each object wrapper in a unique array of objects to draw
   obj = [tailWrapper, leftEyeWrapper, rightEyeWrapper, bodyWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
-  
+  resetShaderParams();
   main();
 }
 
