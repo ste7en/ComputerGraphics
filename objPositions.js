@@ -20,8 +20,8 @@ let invertRotation = false;
 
 let clockHand1LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
 let clockHand2LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
-let leftEyeLocalMatrix = makeLocalMatrix(-0.00799, 0.0475, 0.018, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
-let rightEyeLocalMatrix = makeLocalMatrix(0.00799, 0.0475, 0.018, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
+let leftEyeLocalMatrix = makeLocalMatrix(-0.00799, 0.0475, 0.0195, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
+let rightEyeLocalMatrix = makeLocalMatrix(0.00799, 0.0475, 0.0195, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
 let tailLocalMatrix = makeLocalMatrix(-0.005182, -0.014557, 0.012112, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
 const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
 
@@ -29,8 +29,6 @@ const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0); //m4
 const eye = [0.0, 0.05, 0.2];
 const target = [0.0, 0.0, 0.0];
 const up = [0.0, 1.0, 0.0]; //a vector pointing up 
-const camera = m4.lookAt(eye, target, up);
-const viewMatrix = m4.inverse(camera);
 
 /**
  * Performs matrix manipulations and animations of the scene to be drawn.
@@ -100,6 +98,9 @@ function drawScene(time) {
   let projectionMatrix = m4.perspective(90 * Math.PI / 180, gl.canvas.width / gl.canvas.height, 0.001, 100);
 
   animate();
+
+  const camera = m4.lookAt(eye, target, up);
+  const viewMatrix = m4.inverse(camera);
 
   drawObjects.forEach(function(obj) {
     const programInfo = obj.programInfo;
@@ -256,6 +257,9 @@ async function init(){
 
   // Save each object wrapper in a unique array of objects to draw
   obj = [tailWrapper, leftEyeWrapper, rightEyeWrapper, bodyWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
+
+	window.addEventListener("keydown", keyFunctionDown, false);
+
   resetShaderParams();
   main();
 }

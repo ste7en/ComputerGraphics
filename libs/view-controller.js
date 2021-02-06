@@ -182,11 +182,11 @@ defShaderParams = {
 
 	LBlightType: "none",
 	LBlightColor: "#ffffff",
-	LBPosX: -40,
-	LBPosY: 30,
-	LBPosZ: 50,
-	LBDirTheta: 60,
-	LBDirPhi: 135,
+	LBPosX: -24,
+	LBPosY: 19,
+	LBPosZ: 61,
+	LBDirTheta: 73,
+	LBDirPhi: -11,
 	LBConeOut: 30,
 	LBConeIn: 80,
 	LBDecay: 0,
@@ -194,11 +194,11 @@ defShaderParams = {
 
 	LClightType: "none",
 	LClightColor: "#ffffff",
-	LCPosX: 60,
-	LCPosY: 30,
-	LCPosZ: 50,
+	LCPosX: -15,
+	LCPosY: 23,
+	LCPosZ: 60,
 	LCDirTheta: 60,
-	LCDirPhi: -45,
+	LCDirPhi: -20,
 	LCConeOut: 30,
 	LCConeIn: 80,
 	LCDecay: 0,
@@ -381,5 +381,34 @@ unifParArray =[
 function setupLightsUniforms(uniforms) {
 	for(var i = 0; i < unifParArray.length; i++) {
 		unifParArray[i].type(uniforms);
+	}
+}
+
+var keyFunctionDown =function(e) {
+	switch(e.keyCode) {
+	case 37:
+	//console.log("KeyUp   - Dir LEFT");
+		eye[0] -= 0.01;
+		break;
+	case 39:
+	//console.log("KeyUp   - Dir RIGHT");
+		eye[0] += 0.01;
+		break;
+	case 38:
+	//console.log("KeyUp   - Dir UP");
+		eye[1] += 0.01;
+		break;
+	case 40:
+	//console.log("KeyUp   - Dir DOWN");
+		eye[1] -= 0.01;
+		break;
+	case 173:
+	// KeyUp +
+		eye[2] += 0.01;
+		break;
+	case 171:
+	// KeyUp -
+		eye[2] -= 0.01;
+		break;
 	}
 }
