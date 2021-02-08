@@ -224,14 +224,6 @@ function resetShaderParams() {
 			element.checked = value;
 		}
 	}
-
-	cx = 0.0;
-	cy = 0.05;
-	cz = 0.2;
-	elevation = 0.01;
-	angle = 0.01;
-	roll = 0.01;
-	lookRadius = 10.0;
 }
 
 function unifPar(pHTML, pGLSL, type) {
@@ -257,8 +249,8 @@ function valD100(uniforms) {
 
 function valCol(uniforms) {
 	col = document.getElementById(this.pHTML).value.substring(1,7);
-    R = parseInt(col.substring(0,2) ,16) / 255.0;
-    G = parseInt(col.substring(2,4) ,16) / 255.0;
+	R = parseInt(col.substring(0,2) ,16) / 255.0;
+	G = parseInt(col.substring(2,4) ,16) / 255.0;
 	B = parseInt(col.substring(4,6) ,16) / 255.0;
 	Reflect.set(uniforms, this.pGLSL, [R, G, B, 1.0]);
 }

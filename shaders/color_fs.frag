@@ -56,8 +56,8 @@ vec3 compLightDir(vec3 LPos, vec3 LDir, vec4 lightType) {
 	vec3 spotLightDir = normalize(LPos - fs_pos);
 
 	return  directLightDir * lightType.x +
-				  pointLightDir * lightType.y +
-				  spotLightDir * lightType.z;
+			pointLightDir * lightType.y +
+			spotLightDir * lightType.z;
 }
 
 vec4 compLightColor(vec4 lightColor, float LTarget, float LDecay, vec3 LPos, vec3 LDir,
@@ -77,8 +77,8 @@ vec4 compLightColor(vec4 lightColor, float LTarget, float LDecay, vec3 LPos, vec
 						clamp((CosAngle - LCosOut) / (LCosIn - LCosOut), 0.0, 1.0);
 	// ----> Select final component
 	return  directLightCol * lightType.x +
-				  pointLightCol * lightType.y +
-					spotLightCol * lightType.z;
+			pointLightCol * lightType.y +
+			spotLightCol * lightType.z;
 }
 
 vec4 compDiffuse(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec4 diffColor) {
@@ -123,9 +123,9 @@ vec4 compSpecular(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec3 eyedirVec) 
 	vec4 specularToonB = lightCol * ToonSpecBCol;
 	// ----> Select final component
 	return  specularPhong * u_specularType.x +
-					specularBlinn * u_specularType.y +
-					specularToonP * u_specularType.z +
-					specularToonB * u_specularType.w;
+			specularBlinn * u_specularType.y +
+			specularToonP * u_specularType.z +
+			specularToonB * u_specularType.w;
 }
 
 void main() {
@@ -149,13 +149,13 @@ void main() {
 
     // Diffuse
 	vec4 diffuse =  compDiffuse(LAlightDir, LAlightCol, normalVec, diffColor) + 
-				          compDiffuse(LBlightDir, LBlightCol, normalVec, diffColor) +
-				          compDiffuse(LClightDir, LClightCol, normalVec, diffColor);
+				    compDiffuse(LBlightDir, LBlightCol, normalVec, diffColor) +
+				    compDiffuse(LClightDir, LClightCol, normalVec, diffColor);
 
 	// Specular
 	vec4 specular = compSpecular(LAlightDir, LAlightCol, normalVec, eyeDirVec) +
-					        compSpecular(LBlightDir, LBlightCol, normalVec, eyeDirVec) +
-					        compSpecular(LClightDir, LClightCol, normalVec, eyeDirVec);
+			        compSpecular(LBlightDir, LBlightCol, normalVec, eyeDirVec) +
+			        compSpecular(LClightDir, LClightCol, normalVec, eyeDirVec);
 
     outColor = vec4(clamp(diffuse + specular, 0.0, 1.0).rgb, 1.0);
 }

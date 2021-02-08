@@ -62,8 +62,8 @@ vec3 compLightDir(vec3 LPos, vec3 LDir, vec4 lightType) {
 	vec3 spotLightDir = normalize(LPos - fs_pos);
 
 	return  directLightDir * lightType.x +
-				  pointLightDir * lightType.y +
-				  spotLightDir * lightType.z;
+			pointLightDir * lightType.y +
+			spotLightDir * lightType.z;
 }
 
 vec4 compLightColor(vec4 lightColor, float LTarget, float LDecay, vec3 LPos, vec3 LDir,
@@ -83,8 +83,8 @@ vec4 compLightColor(vec4 lightColor, float LTarget, float LDecay, vec3 LPos, vec
 						clamp((CosAngle - LCosOut) / (LCosIn - LCosOut), 0.0, 1.0);
 	// ----> Select final component
 	return  directLightCol * lightType.x +
-				  pointLightCol * lightType.y +
-					spotLightCol * lightType.z;
+			pointLightCol * lightType.y +
+			spotLightCol * lightType.z;
 }
 
 vec4 compDiffuse(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec4 diffColor) {
@@ -129,58 +129,58 @@ vec4 compSpecular(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec3 eyedirVec) 
 	vec4 specularToonB = lightCol * ToonSpecBCol;
 	// ----> Select final component
 	return  specularPhong * u_specularType.x +
-					specularBlinn * u_specularType.y +
-					specularToonP * u_specularType.z +
-					specularToonB * u_specularType.w;
+			specularBlinn * u_specularType.y +
+			specularToonP * u_specularType.z +
+			specularToonB * u_specularType.w;
 }
 
 vec3 getNormals() {
-  // On-the fly computation of geometrical normal
-  vec3 X = dFdx(fs_pos); 
-  vec3 Y = dFdy(fs_pos);
-  vec3 n_fs_norm = normalize(fs_norm);
-  vec3 n_norm = normalize(cross(X, Y)) * u_computeGeometricalNormals.x + n_fs_norm * u_computeGeometricalNormals.y; 
+	// On-the fly computation of geometrical normal
+	vec3 X = dFdx(fs_pos); 
+	vec3 Y = dFdy(fs_pos);
+	vec3 n_fs_norm = normalize(fs_norm);
+	vec3 n_norm = normalize(cross(X, Y)) * u_computeGeometricalNormals.x + n_fs_norm * u_computeGeometricalNormals.y; 
 
-  // On-the fly computation of tangent and bi-normal:
-  //// First the way in which both the coordinates of the 
-  //// triangle and the UV changes on screen are determined.
+	// On-the fly computation of tangent and bi-normal:
+	//// First the way in which both the coordinates of the 
+	//// triangle and the UV changes on screen are determined.
 
-  vec3 p_dx = X; //dFdx(fs_pos);
-  vec3 p_dy = Y; //dFdy(fs_pos);
+	vec3 p_dx = X; //dFdx(fs_pos);
+	vec3 p_dy = Y; //dFdy(fs_pos);
 
-  vec2 tc_dx = dFdx(fs_uv);
-  vec2 tc_dy = dFdy(fs_uv);
+	vec2 tc_dx = dFdx(fs_uv);
+	vec2 tc_dy = dFdy(fs_uv);
 
-  //// Then the direction of the U axis, which corresponds to 
-  //// the tangent direction, is transformed in world space 
-  //// exploiting the vectors previously computed.
-  vec3 t = (tc_dy.y * p_dx - tc_dx.y * p_dy) / (tc_dx.x * tc_dy.y - tc_dy.x * tc_dx.y);
-  
-  //// Exploiting the cross product and the computed vectors,
-  //// the orthogonal version of the tangent and bitangent are
-  //// computed, as for the case in which tangents are attached to vertexes.
-  t = normalize(t - n_norm * dot(n_norm, t));
+	//// Then the direction of the U axis, which corresponds to 
+	//// the tangent direction, is transformed in world space 
+	//// exploiting the vectors previously computed.
+	vec3 t = (tc_dy.y * p_dx - tc_dx.y * p_dy) / (tc_dx.x * tc_dy.y - tc_dy.x * tc_dx.y);
+	
+	//// Exploiting the cross product and the computed vectors,
+	//// the orthogonal version of the tangent and bitangent are
+	//// computed, as for the case in which tangents are attached to vertexes.
+	t = normalize(t - n_norm * dot(n_norm, t));
 
-  vec3 b = normalize(cross(n_norm, t));
+	vec3 b = normalize(cross(n_norm, t));
 
-  //// Finally, the tangent transform matrix (TBN)
-  mat3 tbn =  mat3(t, b, n_norm);
+	//// Finally, the tangent transform matrix (TBN)
+	mat3 tbn =  mat3(t, b, n_norm);
 
-  vec4 textnm = texture(u_normalMap, fs_uv);
-  vec3 nmNormal = textnm.rgb * 2.0 - vec3(1.0, 1.0, 1.0);
-  vec3 n = normalize(tbn * nmNormal);
+	vec4 textnm = texture(u_normalMap, fs_uv);
+	vec3 nmNormal = textnm.rgb * 2.0 - vec3(1.0, 1.0, 1.0);
+	vec3 n = normalize(tbn * nmNormal);
 
-  return n * u_useNormalMaps.x + n_fs_norm * u_useNormalMaps.y;
+	return n * u_useNormalMaps.x + n_fs_norm * u_useNormalMaps.y;
 }
 
 void main() {
-  vec3 normalVec = getNormals();
-  vec3 eyeDirVec = normalize(u_eyePos - fs_pos);
+	vec3 normalVec = getNormals();
+	vec3 eyeDirVec = normalize(u_eyePos - fs_pos);
 
-  vec4 textcol = texture(u_texture, fs_uv);
-  vec4 diffColor = u_diffuseColor * (1.0-u_DTexMix) + textcol * u_DTexMix;
+	vec4 textcol = texture(u_texture, fs_uv);
+	vec4 diffColor = u_diffuseColor * (1.0-u_DTexMix) + textcol * u_DTexMix;
 
-  //lights
+  	//lights
 	vec3 LAlightDir = compLightDir(u_LAPos, u_LADir, u_LAlightType);
 	vec4 LAlightCol = compLightColor(u_LAlightColor, u_LATarget, u_LADecay, u_LAPos, u_LADir,
 								     u_LAConeOut, u_LAConeIn, u_LAlightType);
@@ -193,15 +193,15 @@ void main() {
 	vec4 LClightCol = compLightColor(u_LClightColor, u_LCTarget, u_LCDecay, u_LCPos, u_LCDir,
 								     u_LCConeOut, u_LCConeIn, u_LClightType);
 
-  // Diffuse
+  	// Diffuse
 	vec4 diffuse =  compDiffuse(LAlightDir, LAlightCol, normalVec, diffColor) + 
-				          compDiffuse(LBlightDir, LBlightCol, normalVec, diffColor) +
-				          compDiffuse(LClightDir, LClightCol, normalVec, diffColor);
+				    compDiffuse(LBlightDir, LBlightCol, normalVec, diffColor) +
+				    compDiffuse(LClightDir, LClightCol, normalVec, diffColor);
 
 	// Specular
 	vec4 specular = compSpecular(LAlightDir, LAlightCol, normalVec, eyeDirVec) +
-					        compSpecular(LBlightDir, LBlightCol, normalVec, eyeDirVec) +
-					        compSpecular(LClightDir, LClightCol, normalVec, eyeDirVec);
+					compSpecular(LBlightDir, LBlightCol, normalVec, eyeDirVec) +
+			        compSpecular(LClightDir, LClightCol, normalVec, eyeDirVec);
 
-  outColor = vec4(clamp(diffuse + specular, 0.0, 1.0).rgb, 1.0);
+	outColor = vec4(clamp(diffuse + specular, 0.0, 1.0).rgb, 1.0);
 }

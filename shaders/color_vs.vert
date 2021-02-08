@@ -10,7 +10,7 @@ uniform mat4 u_vertexMatrix;
 uniform mat4 u_normalMatrix;
 
 void main() {
-  fs_norm = mat3(u_normalMatrix) * a_normal;
-  fs_pos = (u_vertexMatrix * vec4(a_position, 1.0)).xyz;
-  gl_Position = u_worldViewProjection * vec4(a_position, 1.0); //la posizione dipenderà dalla matrice (ci serve per far muovere le cose)
+	fs_pos = (u_vertexMatrix * vec4(a_position, 1.0)).xyz;
+	fs_norm = mat3(u_normalMatrix) * a_normal;
+	gl_Position = u_worldViewProjection * vec4(a_position, 1.0); //la posizione dipenderà dalla matrice (ci serve per far muovere le cose)
 }
