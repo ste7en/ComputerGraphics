@@ -1,9 +1,9 @@
 #version 300 es
 
-in vec3 a_position; //in = attribute, we need a vertex buffer object
+in vec3 a_position;
 in vec2 a_texcoord;
 in vec3 a_normal;
-out vec2 fs_uv; //don't need the buffer object because we initialize it in here
+out vec2 fs_uv;
 out vec3 fs_pos;
 out vec3 fs_norm;
 

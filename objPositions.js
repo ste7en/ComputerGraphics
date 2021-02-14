@@ -11,19 +11,18 @@ const hoursClockhandPath = 'model/pieces/hoursClockhand.obj';
 const tailPath = 'model/pieces/tail.obj';
 
 let obj = [];
-let objectBufferInfo = [];
 let objectUniforms = [];
 let drawObjects = [];
 
 let frameCounter = 0;
 let invertRotation = false;
 
-let clockHand1LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.029
-let clockHand2LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.00175, 0.009, 0.0, 0.0, 0.0, 0.75)); // tz previously set to 0.028
-let leftEyeLocalMatrix = makeLocalMatrix(-0.00799, 0.0475, 0.0195, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.008895, 0.047, 0.018732, 0.0,0.0,0.0,1.0));
-let rightEyeLocalMatrix = makeLocalMatrix(0.00799, 0.0475, 0.0195, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(0.008217, 0.047, 0.018971, 0.0,0.0,0.0,1.0));
-let tailLocalMatrix = makeLocalMatrix(-0.005182, -0.014557, 0.012112, 0.0,0.0,0.0,2.0); //m4.transpose(utils.MakeWorld(-0.002591, -0.014557, 0.012112, 0.0, 0.0, 0.0, 1.0));
-const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0); //m4.transpose(utils.MakeWorld(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));//m4.identity();
+let clockHand1LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); // tz previously set to 0.029
+let clockHand2LocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 2.0); // tz previously set to 0.028
+let leftEyeLocalMatrix = makeLocalMatrix(-0.00799, 0.0475, 0.0195, 0.0,0.0,0.0,2.0);
+let rightEyeLocalMatrix = makeLocalMatrix(0.00799, 0.0475, 0.0195, 0.0,0.0,0.0,2.0);
+let tailLocalMatrix = makeLocalMatrix(-0.005182, -0.014557, 0.012112, 0.0,0.0,0.0,2.0);
+const bodyLocalMatrix = makeLocalMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0);
 
 // Vector and matrixes used in drawScene() to compute the worldViewProjectionMatrix
 const eye = [0.0, 0.05, 0.2];
@@ -114,9 +113,9 @@ function drawScene(time) {
 		setupLightsUniforms(obj.uniforms);
 
 		gl.useProgram(programInfo.program);
-		twgl.setBuffersAndAttributes(gl, programInfo, obj.vertexArrayInfo); // binds buffers and sets attributes
+		twgl.setBuffersAndAttributes(gl, programInfo, obj.bufferInfo); // binds buffers and sets attributes
 		twgl.setUniforms(programInfo, obj.uniforms);
-		twgl.drawBufferInfo(gl, obj.vertexArrayInfo);
+		twgl.drawBufferInfo(gl, obj.bufferInfo);
 	})
 
 	window.requestAnimationFrame(drawScene);
@@ -170,11 +169,10 @@ function main() {
 				texcoord: object.getTextures(),
 				indices: object.getIndices()
 			};
+			// creating buffers and attribute settings
 			let objBuffInfo = twgl.createBufferInfoFromArrays(gl, arrays);
 			let programInfo = object.getProgramInfo();
-			
-			objectBufferInfo.push(objBuffInfo);
-	
+				
 			switch(index) {
 				case 0: // tail
 					uniforms.u_color = black;
@@ -193,7 +191,7 @@ function main() {
 
 			drawObjects.push({
 				programInfo: programInfo,
-				vertexArrayInfo: objBuffInfo,
+				bufferInfo: objBuffInfo,
 				uniforms: uniforms,
 				localMatrix: object.getLocalMatrix()
 			});
@@ -249,15 +247,10 @@ async function init(){
 	hoursClockhandWrapper.setLocalMatrix(clockHand2LocalMatrix).setProgramInfo(colorProgramInfo);
 	minutesClockhandWrapper.setLocalMatrix(clockHand1LocalMatrix).setProgramInfo(colorProgramInfo);
 
-	await tailWrapper.loadModel();
-	await bodyWrapper.loadModel();
-	await leftEyeWrapper.loadModel();
-	await rightEyeWrapper.loadModel();
-	await hoursClockhandWrapper.loadModel();
-	await minutesClockhandWrapper.loadModel();
-
 	// Save each object wrapper in a unique array of objects to draw
 	obj = [tailWrapper, leftEyeWrapper, rightEyeWrapper, bodyWrapper, hoursClockhandWrapper, minutesClockhandWrapper];
+
+	obj.forEach(async (wrapper) => { await wrapper.loadModel(); });
 
 	window.addEventListener("keydown", keyFunctionDown, false);
 

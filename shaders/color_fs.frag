@@ -49,10 +49,16 @@ uniform float u_SToonTh;
 vec3 compLightDir(vec3 LPos, vec3 LDir, vec4 lightType) {
 	//lights
 	// -> Point
+	// Point lights emit light from fixed points in the space and direction
+	// varies depending on the point x of the object it is illuminating
 	vec3 pointLightDir = normalize(LPos - fs_pos);
 	// -> Direct
+	// Direct lights can be specified with a constant vector
+	// and are independent of the position x on the object
 	vec3 directLightDir = LDir;
 	// -> Spot
+	// Spot lights are conic sources characterized
+	// by a direction d and a position 
 	vec3 spotLightDir = normalize(LPos - fs_pos);
 
 	return  directLightDir * lightType.x +
@@ -84,8 +90,17 @@ vec4 compLightColor(vec4 lightColor, float LTarget, float LDecay, vec3 LPos, vec
 vec4 compDiffuse(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec4 diffColor) {
 	// Diffuse
 	// --> Lambert
+	// Each point of an object hit by a ray of light, reflects
+	// it with uniform probability in all the direction.
+	// The quantity of light received by an object, depends 
+	// on the angle between the ray of light and reflecting surface
 	vec4 diffuseLambert = lightCol * clamp(dot(normalVec, lightDir),0.0,1.0) * diffColor;
 	// --> Toon
+	// Toon shading simplifies the output color range, using 
+	// only discrete values according to a set of thresholds.
+	// It starts from a standard Lambert BRDF for the diffuse
+	// then it uses two colors and a threshold for determining
+	// which one to choose.
 	vec4 ToonCol;
 	if(dot(normalVec, lightDir) > u_DToonTh) {
 		ToonCol = diffColor;
@@ -100,12 +115,21 @@ vec4 compDiffuse(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec4 diffColor) {
 vec4 compSpecular(vec3 lightDir, vec4 lightCol, vec3 normalVec, vec3 eyedirVec) {
 	// Specular
 	// --> Phong
+	// In the Phong model, the specular reflection has the same angle 
+	// as the incoming ray with respect to the normal vector, but it 
+	// is oriented in the opposite direction, and it is positioned on 
+	// the same plane as the light and the normal vectors
 	vec3 reflection = -reflect(lightDir, normalVec);
 	vec4 specularPhong = lightCol * pow(max(dot(reflection, eyedirVec), 0.0), u_SpecShine) * u_specularColor;
 	// --> Blinn
+	// The Blinn reflection model is an alternative to the Phong 
+	// shading model that uses the  half vector h
 	vec3 halfVec = normalize(lightDir + eyedirVec);
 	vec4 specularBlinn = lightCol * pow(max(dot(normalVec, halfVec), 0.0), u_SpecShine) * u_specularColor;
 	// --> Toon Phong
+	// It starts from a standard Phong or Blinn BRDF with gamma=1
+	// then it uses two colors and a threshold for determining
+	// which one to choose.
 	vec4 ToonSpecPCol;
 	if(dot(reflection, eyedirVec) > u_SToonTh) {
 		ToonSpecPCol = u_specularColor;
@@ -148,11 +172,16 @@ void main() {
 								     u_LCConeOut, u_LCConeIn, u_LClightType);
 
     // Diffuse
+	// The diffuse component of the BRDF represents the main color of the object
 	vec4 diffuse =  compDiffuse(LAlightDir, LAlightCol, normalVec, diffColor) + 
 				    compDiffuse(LBlightDir, LBlightCol, normalVec, diffColor) +
 				    compDiffuse(LClightDir, LClightCol, normalVec, diffColor);
 
 	// Specular
+	// Shiny objects tend to reflect the incoming light in a particular angle, 
+	// called  the specular direction, which depends on the direction from which 
+	// the object is seen omega_r. This effect is implemented in the specular 
+	// component of the BRDF.
 	vec4 specular = compSpecular(LAlightDir, LAlightCol, normalVec, eyeDirVec) +
 			        compSpecular(LBlightDir, LBlightCol, normalVec, eyeDirVec) +
 			        compSpecular(LClightDir, LClightCol, normalVec, eyeDirVec);
