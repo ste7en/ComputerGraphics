@@ -160,7 +160,7 @@ function showLight(sel) {
 }
 
 defShaderParams = {
-	computeGeometricalNormals: "true",
+	computeGeometricalNormals: "false",
 	useNormalMaps: "true",
 
 	diffuseType: "lambert",
