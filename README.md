@@ -23,6 +23,10 @@ The aim of this project was to develop a WebGL application and associated OpenGL
 ## Implementation
 The application has been written in JavaScript and GLSL and consists of different [3D .obj files](./model/) with the requirement that the final implementation should show the current time and the movement of the cat's eyes and tail needs to be in the same direction, as the real clock does.
 
+The final result is:
+
+<img src="./screenshots/cat-watch-wall.gif" width="75%" />
+
 ### Textures
 Most of the components of the watch use two kinds of textures: a normal color texture and a [normal map texture](https://en.wikipedia.org/wiki/Normal_mapping) that encodes information about normal vectors for each internal point of a triangle. Because of the [tangent space encoding](https://en.wikipedia.org/wiki/Normal_mapping#Calculating_tangent_space) of this values in the normal map, the fragment shader will perform an *on-the-fly* computation of geometrical normals to obtain the tangent and bitangent vectors.
 This dynamic computation can be enabled in the UI control *"Compute geometrical normals"* and is not enabled by default because using the normal vector direction stored with the geometry results in a better rendering.
