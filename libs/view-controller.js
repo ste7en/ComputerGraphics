@@ -221,7 +221,7 @@ function resetShaderParams() {
 		}
 
 		if(element.type == "checkbox") {
-			element.checked = value;
+			element.checked = value == true.toString();
 		}
 	}
 }
