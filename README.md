@@ -54,7 +54,7 @@ The clockhands rotation (in degrees) is calculated on the current time as follow
 where `hour` is a number between 0 and 11 while `minutes` varies from 0 to 59. For a better result the hours clockhand's rotation is also influenced by the number of elapsed minutes.
 
 ### Building and Deploying the project
-The last version of the project is available at [this GitHub Page](ste7en.github.io/ComputerGraphics) but can also be build offline by cloning this repository and running a webserver (e.g. Apache) in the same folder.
+The last version of the project is available at [this GitHub Page](https://ste7en.github.io/ComputerGraphics/) but can also be build offline by cloning this repository and running a webserver (e.g. Apache) in the same folder.
 
 ## Screenshots
 Fig. 1 - a single white direct light with Lambert diffuse and Phong Specular.
